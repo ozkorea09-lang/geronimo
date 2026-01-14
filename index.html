@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>제로니모 커피하우스 | Geronimo Coffee House</title>
+    <meta name="description" content="세계 최고의 스페셜티 커피와 대한민국 명장이 만드는 베이커리 & 브런치, 제로니모 커피하우스입니다." />
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                coffee: '#2C1810', // Deep Coffee (Base Dark)
+                mocha: '#4E342E', // Medium Dark Brown
+                wood: '#8D6E63', // Wood accent
+                // Changed from pale beige to warm wood tones
+                latte: '#E8DCCA', // Light Wood (Main Background) - Warm Tan
+                cream: '#F5EBE0', // Lighter Wood (Card Background) - Off White/Wood
+                gold: '#C5A028', // Highlight
+                text: '#3E2723', // Main Text (Dark Brown)
+                muted: '#5D4037', // Muted Text (Darker Wood instead of gray)
+                
+                // Category Colors
+                catCoffee: '#5D4037',
+                catBev: '#558B2F', // Matcha/Green
+                catBaker: '#E65100', // Baked/Orange
+                catBrunch: '#38BDF8', // Vivid Sky Blue (Updated)
+              }
+            },
+            fontFamily: {
+              sans: ['"Noto Sans KR"', 'sans-serif'],
+              serif: ['"Noto Serif KR"', 'serif'],
+            },
+            boxShadow: {
+              'wood': '0 10px 15px -3px rgba(44, 24, 16, 0.3), 0 4px 6px -2px rgba(44, 24, 16, 0.1)',
+              'inner-wood': 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.2)',
+            }
+          }
+        }
+      }
+    </script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Noto+Serif+KR:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+      body {
+        background-color: #E8DCCA; /* brand-latte */
+        color: #3E2723; /* brand-text */
+        font-family: 'Noto Sans KR', sans-serif;
+      }
+      .font-serif {
+        font-family: 'Noto Serif KR', serif;
+      }
+      /* Custom Scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #E8DCCA; 
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #8D6E63; 
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #4E342E; 
+      }
+    </style>
+    <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@18.2.0",
+    "react/jsx-runtime": "https://esm.sh/react@18.2.0/jsx-runtime",
+    "react-dom": "https://esm.sh/react-dom@18.2.0?deps=react@18.2.0",
+    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client?deps=react@18.2.0",
+    "react-router-dom": "https://esm.sh/react-router-dom@6.22.3?deps=react@18.2.0,react-dom@18.2.0",
+    "lucide-react": "https://esm.sh/lucide-react@0.344.0?deps=react@18.2.0",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/"
+  }
+}
+</script>
+</head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
