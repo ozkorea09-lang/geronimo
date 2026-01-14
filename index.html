@@ -6,7 +6,7 @@
     <title>제로니모 커피하우스 | Geronimo Coffee House</title>
     <meta name="description" content="세계 최고의 스페셜티 커피와 대한민국 명장이 만드는 베이커리 & 브런치, 제로니모 커피하우스입니다." />
     
-    <!-- Tailwind CSS -->
+    <!-- Tailwind CSS (CDN for runtime styling) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -14,21 +14,18 @@
           extend: {
             colors: {
               brand: {
-                coffee: '#2C1810', // Deep Coffee (Base Dark)
-                mocha: '#4E342E', // Medium Dark Brown
-                wood: '#8D6E63', // Wood accent
-                // Changed from pale beige to warm wood tones
-                latte: '#E8DCCA', // Light Wood (Main Background) - Warm Tan
-                cream: '#F5EBE0', // Lighter Wood (Card Background) - Off White/Wood
-                gold: '#C5A028', // Highlight
-                text: '#3E2723', // Main Text (Dark Brown)
-                muted: '#5D4037', // Muted Text (Darker Wood instead of gray)
-                
-                // Category Colors
+                coffee: '#2C1810',
+                mocha: '#4E342E',
+                wood: '#8D6E63',
+                latte: '#E8DCCA',
+                cream: '#F5EBE0',
+                gold: '#C5A028',
+                text: '#3E2723',
+                muted: '#5D4037',
                 catCoffee: '#5D4037',
-                catBev: '#558B2F', // Matcha/Green
-                catBaker: '#E65100', // Baked/Orange
-                catBrunch: '#38BDF8', // Vivid Sky Blue (Updated)
+                catBev: '#558B2F',
+                catBaker: '#E65100',
+                catBrunch: '#38BDF8',
               }
             },
             fontFamily: {
@@ -51,8 +48,8 @@
     
     <style>
       body {
-        background-color: #E8DCCA; /* brand-latte */
-        color: #3E2723; /* brand-text */
+        background-color: #E8DCCA;
+        color: #3E2723;
         font-family: 'Noto Sans KR', sans-serif;
       }
       .font-serif {
@@ -73,22 +70,23 @@
         background: #4E342E; 
       }
     </style>
-    <script type="importmap">
+  <script type="importmap">
 {
   "imports": {
-    "react": "https://esm.sh/react@18.2.0",
-    "react/jsx-runtime": "https://esm.sh/react@18.2.0/jsx-runtime",
-    "react-dom": "https://esm.sh/react-dom@18.2.0?deps=react@18.2.0",
-    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client?deps=react@18.2.0",
-    "react-router-dom": "https://esm.sh/react-router-dom@6.22.3?deps=react@18.2.0,react-dom@18.2.0",
-    "lucide-react": "https://esm.sh/lucide-react@0.344.0?deps=react@18.2.0",
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
     "react/": "https://esm.sh/react@^19.2.3/",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/"
+    "react-router-dom": "https://esm.sh/react-router-dom@^7.12.0",
+    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
+    "vite": "https://esm.sh/vite@^7.3.1",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2"
   }
 }
 </script>
 </head>
   <body>
     <div id="root"></div>
+    <!-- Entry point for Vite -->
+    <script type="module" src="/index.tsx"></script>
   </body>
 </html>
