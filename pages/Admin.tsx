@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { DataService } from '../services/storage';
 import { MenuItem, Post, MenuCategory, GalleryItem, AboutPageData, SiteConfig } from '../types';
-import { Trash2, Plus, LogIn, Save, Coffee, FileText, Settings, Edit, X, Image as ImageIcon, BookOpen, Pin, Calendar, Upload, CheckCircle, AlertCircle } from 'lucide-react';
+import { transformGoogleDriveUrl } from '../utils/imageHelper';
+import { openGoogleDrivePicker } from '../utils/googleDrivePicker';
+import { AdminImageInput } from '../components/AdminImageInput';
+import { Trash2, Plus, LogIn, Save, Coffee, FileText, Settings, Edit, X, Image as ImageIcon, BookOpen, Pin, Calendar, Upload, CheckCircle, AlertCircle, HardDrive } from 'lucide-react';
 
 const Admin: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -80,14 +83,12 @@ const Admin: React.FC = () => {
   ) => {
     const file = e.target.files?.[0];
     if (file) {
-      // LocalStorage 용량 제한을 고려하여 1MB로 제한 (권장)
       if (file.size > 1024 * 1024) {
         alert("이미지 크기는 1MB 이하여야 저장이 원활합니다.\n용량이 큰 이미지는 저장이 안 될 수 있습니다.");
       }
       const reader = new FileReader();
       reader.onloadend = () => {
           onLoad(reader.result as string);
-          // 입력값 초기화는 읽기가 끝난 후 수행하여 동일 파일 재선택 가능하게 함
           e.target.value = ''; 
       };
       reader.readAsDataURL(file);
@@ -99,10 +100,14 @@ const Admin: React.FC = () => {
     e.preventDefault();
     if (!newItem.name || !newItem.price) return alert('메뉴명과 가격은 필수입니다.');
     
+    // 저장 시 Google Drive URL 변환 적용
+    const rawUrl = newItem.imageUrl || '';
+    const finalImageUrl = transformGoogleDriveUrl(rawUrl) || 'https://via.placeholder.com/800x600?text=No+Image';
+
     try {
         let updatedItems: MenuItem[];
         if (editingId) {
-          updatedItems = menuItems.map(item => item.id === editingId ? { ...item, ...newItem } as MenuItem : item);
+          updatedItems = menuItems.map(item => item.id === editingId ? { ...item, ...newItem, imageUrl: finalImageUrl } as MenuItem : item);
           alert('메뉴가 수정되었습니다.');
         } else {
           const item: MenuItem = {
@@ -112,14 +117,14 @@ const Admin: React.FC = () => {
             description: newItem.description || '',
             price: Number(newItem.price),
             category: newItem.category as MenuCategory,
-            imageUrl: newItem.imageUrl || 'https://via.placeholder.com/800x600?text=No+Image',
+            imageUrl: finalImageUrl,
             isSignature: !!newItem.isSignature,
           };
           updatedItems = [item, ...menuItems];
           alert('메뉴가 추가되었습니다.');
         }
-        DataService.saveMenu(updatedItems); // Try saving first
-        setMenuItems(updatedItems); // Update state only if save succeeds (or assumes success, but error catches below)
+        DataService.saveMenu(updatedItems); 
+        setMenuItems(updatedItems);
         setNewItem({ category: 'coffee', name: '', nameEng: '', price: 0, description: '', imageUrl: '', isSignature: false });
         setEditingId(null);
     } catch (error) {
@@ -146,16 +151,20 @@ const Admin: React.FC = () => {
     e.preventDefault();
     if (!newGalleryItem.title || !newGalleryItem.imageUrl) return alert('제목과 이미지는 필수입니다.');
 
+    // 저장 시 Google Drive URL 변환 안전하게 적용
+    const rawUrl = newGalleryItem.imageUrl || '';
+    const finalImageUrl = transformGoogleDriveUrl(rawUrl);
+
     try {
         let updatedItems: GalleryItem[];
         if (editingGalleryId) {
-            updatedItems = galleryItems.map(item => item.id === editingGalleryId ? { ...item, ...newGalleryItem } as GalleryItem : item);
+            updatedItems = galleryItems.map(item => item.id === editingGalleryId ? { ...item, ...newGalleryItem, imageUrl: finalImageUrl } as GalleryItem : item);
             alert('갤러리 항목이 수정되었습니다.');
         } else {
             const item: GalleryItem = {
                 id: Date.now().toString(),
                 title: newGalleryItem.title,
-                imageUrl: newGalleryItem.imageUrl,
+                imageUrl: finalImageUrl,
                 category: newGalleryItem.category as 'interior' | 'menu'
             };
             updatedItems = [item, ...galleryItems];
@@ -171,10 +180,15 @@ const Admin: React.FC = () => {
   };
 
   const handleDeleteGallery = (id: string) => {
-    if (window.confirm('정말 삭제하시겠습니까?')) {
-      const updated = galleryItems.filter(item => item.id !== id);
-      setGalleryItems(updated);
-      DataService.saveGallery(updated);
+    try {
+        if (window.confirm('정말 삭제하시겠습니까?')) {
+            const updated = galleryItems.filter(item => item.id !== id);
+            setGalleryItems(updated);
+            DataService.saveGallery(updated);
+        }
+    } catch (error) {
+        console.error("Delete Error", error);
+        alert("삭제 중 오류가 발생했습니다.");
     }
   };
 
@@ -189,13 +203,16 @@ const Admin: React.FC = () => {
     e.preventDefault();
     if (!newPost.title || !newPost.content) return alert('제목과 내용은 필수입니다.');
 
+    const rawUrl = newPost.imageUrl || '';
+    const finalImageUrl = rawUrl ? transformGoogleDriveUrl(rawUrl) : undefined;
+
     try {
         const todayStr = new Date().toISOString().split('T')[0];
         const postDate = newPost.date || todayStr;
 
         let updatedItems: Post[];
         if (editingPostId) {
-            updatedItems = newsItems.map(item => item.id === editingPostId ? { ...item, ...newPost, date: postDate } as Post : item);
+            updatedItems = newsItems.map(item => item.id === editingPostId ? { ...item, ...newPost, imageUrl: finalImageUrl, date: postDate } as Post : item);
             alert('게시글이 수정되었습니다.');
         } else {
             const item: Post = {
@@ -204,15 +221,13 @@ const Admin: React.FC = () => {
                 content: newPost.content!,
                 date: postDate,
                 category: newPost.category as 'notice' | 'event',
-                imageUrl: newPost.imageUrl,
+                imageUrl: finalImageUrl,
                 isPinned: !!newPost.isPinned
             };
             updatedItems = [item, ...newsItems];
             alert('게시글이 등록되었습니다.');
         }
-        // Re-sort
         updatedItems.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-        
         DataService.savePosts(updatedItems);
         setNewsItems(updatedItems);
         setNewPost({ category: 'notice', title: '', content: '', date: '', imageUrl: '', isPinned: false });
@@ -236,7 +251,7 @@ const Admin: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // --- About Handlers (Modified for Stability) ---
+  // --- About Handlers ---
   const handleSaveAbout = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (aboutData) {
@@ -251,14 +266,14 @@ const Admin: React.FC = () => {
   };
 
   const updateAboutField = (section: keyof AboutPageData, field: string, value: any) => {
+    const finalValue = (field.toLowerCase().includes('image') || field === 'url') 
+      ? transformGoogleDriveUrl(value) 
+      : value;
+
     setAboutData(prev => {
       if (!prev) return null;
-      // Deep copy specific section to ensure immutability and React rerender
-      const sectionData = { ...prev[section], [field]: value };
-      return {
-        ...prev,
-        [section]: sectionData
-      } as AboutPageData;
+      const sectionData = { ...prev[section], [field]: finalValue };
+      return { ...prev, [section]: sectionData } as AboutPageData;
     });
   };
 
@@ -267,23 +282,15 @@ const Admin: React.FC = () => {
         if (!prev) return null;
         const newItems = [...prev.philosophy.items];
         newItems[index] = { ...newItems[index], [field]: value };
-        return {
-            ...prev,
-            philosophy: { ...prev.philosophy, items: newItems }
-        };
+        return { ...prev, philosophy: { ...prev.philosophy, items: newItems } };
     });
   };
 
-  const addAboutGalleryImage = (e: React.ChangeEvent<HTMLInputElement>) => {
-      handleImageUpload(e, (url) => {
-          setAboutData(prev => {
-              if(!prev) return null;
-              const newImg = { id: Date.now().toString(), url, caption: '새 이미지' };
-              return {
-                  ...prev,
-                  gallery: { ...prev.gallery, images: [...prev.gallery.images, newImg] }
-              };
-          });
+  const addAboutGalleryImage = (url: string) => {
+      setAboutData(prev => {
+          if(!prev) return null;
+          const newImg = { id: Date.now().toString(), url: transformGoogleDriveUrl(url), caption: '새 이미지' };
+          return { ...prev, gallery: { ...prev.gallery, images: [...prev.gallery.images, newImg] } };
       });
   };
 
@@ -291,10 +298,7 @@ const Admin: React.FC = () => {
       if(window.confirm('삭제하시겠습니까?')) {
         setAboutData(prev => {
             if(!prev) return null;
-            return {
-                ...prev,
-                gallery: { ...prev.gallery, images: prev.gallery.images.filter(img => img.id !== id) }
-            };
+            return { ...prev, gallery: { ...prev.gallery, images: prev.gallery.images.filter(img => img.id !== id) } };
         });
       }
   };
@@ -302,10 +306,15 @@ const Admin: React.FC = () => {
   const updateAboutGalleryCaption = (id: string, caption: string) => {
     setAboutData(prev => {
         if(!prev) return null;
-        return {
-            ...prev,
-            gallery: { ...prev.gallery, images: prev.gallery.images.map(img => img.id === id ? {...img, caption} : img) }
-        };
+        return { ...prev, gallery: { ...prev.gallery, images: prev.gallery.images.map(img => img.id === id ? {...img, caption} : img) } };
+    });
+  };
+
+  // About Gallery Mini Picker Trigger
+  const handleAboutGalleryPicker = () => {
+    openGoogleDrivePicker((url) => {
+      const transformed = transformGoogleDriveUrl(url);
+      addAboutGalleryImage(transformed);
     });
   };
 
@@ -414,11 +423,7 @@ const Admin: React.FC = () => {
                          <form onSubmit={handleSaveMenu} className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-brand-latte/50 p-6 rounded-lg border border-brand-wood/10">
                             <div className="col-span-1">
                                 <label className="block text-xs font-bold text-brand-wood mb-1">카테고리</label>
-                                <select 
-                                    value={newItem.category} 
-                                    onChange={e => setNewItem({...newItem, category: e.target.value as any})} 
-                                    className="w-full p-2 border border-brand-wood/30 rounded bg-white text-brand-text"
-                                >
+                                <select value={newItem.category} onChange={e => setNewItem({...newItem, category: e.target.value as any})} className="w-full p-2 border border-brand-wood/30 rounded bg-white text-brand-text">
                                     <option value="coffee">Specialty Coffee</option>
                                     <option value="beverage">Beverage</option>
                                     <option value="bakery">Bakery</option>
@@ -437,29 +442,16 @@ const Admin: React.FC = () => {
                                 <label className="block text-xs font-bold text-brand-wood mb-1">메뉴명 (영문)</label>
                                 <input type="text" value={newItem.nameEng||''} onChange={e=>setNewItem({...newItem, nameEng:e.target.value})} className="w-full p-2 border border-brand-wood/30 rounded bg-white" placeholder="Ex: Americano" />
                             </div>
-                            
                             <div className="col-span-2">
                                 <label className="block text-xs font-bold text-brand-wood mb-1">메뉴 설명</label>
                                 <textarea value={newItem.description||''} onChange={e=>setNewItem({...newItem, description:e.target.value})} className="w-full p-2 border border-brand-wood/30 rounded bg-white h-20" placeholder="메뉴에 대한 설명을 입력하세요." />
                             </div>
 
-                            <div className="col-span-2">
-                                <label className="block text-xs font-bold text-brand-wood mb-1">메뉴 이미지</label>
-                                <div className="flex items-center gap-4">
-                                    <div className="w-20 h-20 bg-brand-wood/10 rounded overflow-hidden flex-shrink-0 border border-brand-wood/20">
-                                        {newItem.imageUrl ? <img src={newItem.imageUrl} alt="Preview" className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center"><ImageIcon size={20} className="text-brand-wood/40"/></div>}
-                                    </div>
-                                    <div className="flex-grow">
-                                        <input 
-                                            type="file" 
-                                            accept="image/*"
-                                            onChange={(e) => handleImageUpload(e, (url) => setNewItem({...newItem, imageUrl: url}))}
-                                            className="block w-full text-sm text-brand-muted file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-brand-coffee file:text-white hover:file:bg-brand-mocha"
-                                        />
-                                        <p className="text-xs text-brand-muted mt-1">* 3MB 이하 권장</p>
-                                    </div>
-                                </div>
-                            </div>
+                            <AdminImageInput
+                                label="메뉴 이미지"
+                                value={newItem.imageUrl}
+                                onChange={(val) => setNewItem({...newItem, imageUrl: val})}
+                            />
 
                             <div className="col-span-2 flex items-center gap-2 mt-2">
                                 <input type="checkbox" id="isSignature" checked={newItem.isSignature||false} onChange={e=>setNewItem({...newItem, isSignature:e.target.checked})} className="w-4 h-4 text-brand-coffee focus:ring-brand-gold" />
@@ -470,7 +462,7 @@ const Admin: React.FC = () => {
                                 <Save size={18}/> {editingId ? '수정사항 저장' : '새 메뉴 등록'}
                             </button>
                          </form>
-
+                         
                          <div className="mt-8">
                              <h4 className="text-brand-wood font-bold mb-4 border-b border-brand-wood/10 pb-2">등록된 메뉴 목록</h4>
                              <div className="space-y-2 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
@@ -484,11 +476,10 @@ const Admin: React.FC = () => {
                                                 <p className="font-bold text-brand-text text-sm">{item.name} <span className="text-xs font-normal text-brand-muted">({item.category})</span></p>
                                                 <p className="text-xs text-brand-coffee font-bold">₩ {item.price.toLocaleString()}</p>
                                             </div>
-                                            {item.isSignature && <span className="text-[10px] bg-brand-gold text-white px-2 py-0.5 rounded-full">Signature</span>}
                                         </div>
                                         <div className="flex gap-2">
-                                            <button onClick={()=>handleEditMenu(item)} className="p-2 text-brand-wood hover:text-brand-coffee hover:bg-brand-latte rounded transition-colors"><Edit size={16}/></button>
-                                            <button onClick={()=>handleDeleteMenu(item.id)} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"><Trash2 size={16}/></button>
+                                            <button type="button" onClick={() => handleEditMenu(item)} className="p-2 text-brand-wood hover:text-brand-coffee hover:bg-brand-latte rounded transition-colors"><Edit size={16}/></button>
+                                            <button type="button" onClick={() => handleDeleteMenu(item.id)} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"><Trash2 size={16}/></button>
                                         </div>
                                     </div>
                                 ))}
@@ -522,40 +513,47 @@ const Admin: React.FC = () => {
                                 <label className="block text-xs font-bold text-brand-wood mb-1">제목</label>
                                 <input type="text" value={newGalleryItem.title||''} onChange={e=>setNewGalleryItem({...newGalleryItem, title:e.target.value})} className="w-full p-2 border border-brand-wood/30 rounded bg-white" placeholder="이미지 제목" />
                             </div>
-                            <div className="col-span-2">
-                                <label className="block text-xs font-bold text-brand-wood mb-1">이미지 업로드</label>
-                                <div className="flex items-center gap-4">
-                                    <div className="w-20 h-20 bg-brand-wood/10 rounded overflow-hidden flex-shrink-0 border border-brand-wood/20">
-                                        {newGalleryItem.imageUrl ? <img src={newGalleryItem.imageUrl} alt="Preview" className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center"><ImageIcon size={20} className="text-brand-wood/40"/></div>}
-                                    </div>
-                                    <div className="flex-grow">
-                                        <input 
-                                            type="file" 
-                                            accept="image/*"
-                                            onChange={(e) => handleImageUpload(e, (url) => setNewGalleryItem({...newGalleryItem, imageUrl: url}))}
-                                            className="block w-full text-sm text-brand-muted file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-brand-coffee file:text-white hover:file:bg-brand-mocha"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
+                            
+                            <AdminImageInput
+                                label="이미지 업로드"
+                                value={newGalleryItem.imageUrl}
+                                onChange={(val) => setNewGalleryItem({...newGalleryItem, imageUrl: val})}
+                            />
+
                             <button type="submit" className="col-span-2 bg-brand-coffee text-white py-3 rounded hover:bg-brand-mocha transition-colors font-bold shadow-md flex justify-center items-center gap-2">
                                 <Save size={18}/> {editingGalleryId ? '수정사항 저장' : '이미지 등록'}
                             </button>
                         </form>
-
+                        
+                        {/* Gallery Grid */}
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
                             {galleryItems.map(item => (
                                 <div key={item.id} className="relative group rounded-lg overflow-hidden border border-brand-wood/20 shadow-sm aspect-square bg-white">
                                     <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover"/>
-                                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-center items-center gap-2">
+                                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-center items-center gap-2 z-10">
                                         <p className="text-white text-xs font-bold px-2 text-center">{item.title}</p>
                                         <div className="flex gap-2">
-                                            <button onClick={()=>handleEditGallery(item)} className="p-1.5 bg-white text-brand-coffee rounded-full hover:bg-brand-gold hover:text-white transition-colors"><Edit size={14}/></button>
-                                            <button onClick={()=>handleDeleteGallery(item.id)} className="p-1.5 bg-white text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-colors"><Trash2 size={14}/></button>
+                                            <button 
+                                                type="button" 
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleEditGallery(item);
+                                                }} 
+                                                className="p-1.5 bg-white text-brand-coffee rounded-full hover:bg-brand-gold hover:text-white transition-colors cursor-pointer"
+                                            >
+                                                <Edit size={14}/>
+                                            </button>
+                                            <button 
+                                                type="button" 
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDeleteGallery(item.id);
+                                                }} 
+                                                className="p-1.5 bg-white text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-colors cursor-pointer"
+                                            >
+                                                <Trash2 size={14}/>
+                                            </button>
                                         </div>
-                                    </div>
-                                    <div className="absolute bottom-0 left-0 right-0 bg-brand-coffee/80 text-white text-[10px] py-1 px-2 text-center truncate">
-                                        {item.category}
                                     </div>
                                 </div>
                             ))}
@@ -601,22 +599,13 @@ const Admin: React.FC = () => {
                                 <label className="block text-xs font-bold text-brand-wood mb-1">내용</label>
                                 <textarea value={newPost.content||''} onChange={e=>setNewPost({...newPost, content:e.target.value})} className="w-full p-2 border border-brand-wood/30 rounded bg-white h-32" placeholder="내용을 입력하세요." />
                             </div>
-                            <div className="col-span-2">
-                                <label className="block text-xs font-bold text-brand-wood mb-1">대표 이미지</label>
-                                <div className="flex items-center gap-4">
-                                    <div className="w-20 h-20 bg-brand-wood/10 rounded overflow-hidden flex-shrink-0 border border-brand-wood/20">
-                                        {newPost.imageUrl ? <img src={newPost.imageUrl} alt="Preview" className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center"><ImageIcon size={20} className="text-brand-wood/40"/></div>}
-                                    </div>
-                                    <div className="flex-grow">
-                                        <input 
-                                            type="file" 
-                                            accept="image/*"
-                                            onChange={(e) => handleImageUpload(e, (url) => setNewPost({...newPost, imageUrl: url}))}
-                                            className="block w-full text-sm text-brand-muted file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-brand-coffee file:text-white hover:file:bg-brand-mocha"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
+                            
+                            <AdminImageInput
+                                label="대표 이미지"
+                                value={newPost.imageUrl}
+                                onChange={(val) => setNewPost({...newPost, imageUrl: val})}
+                            />
+
                             <div className="col-span-2 flex items-center gap-2 mt-2">
                                 <input type="checkbox" id="isPinned" checked={newPost.isPinned||false} onChange={e=>setNewPost({...newPost, isPinned:e.target.checked})} className="w-4 h-4 text-brand-coffee" />
                                 <label htmlFor="isPinned" className="text-brand-coffee font-bold text-sm flex items-center gap-1"><Pin size={14}/> 상단 고정 (Pinned)</label>
@@ -625,7 +614,7 @@ const Admin: React.FC = () => {
                                 <Save size={18}/> {editingPostId ? '수정사항 저장' : '게시글 등록'}
                             </button>
                         </form>
-
+                        
                         <div className="space-y-4">
                             {newsItems.map(item => (
                                 <div key={item.id} className={`p-4 rounded border flex justify-between items-start ${item.isPinned ? 'bg-brand-gold/10 border-brand-gold/30' : 'bg-white border-brand-wood/10'}`}>
@@ -636,11 +625,10 @@ const Admin: React.FC = () => {
                                             <span className="text-xs text-brand-muted flex items-center gap-1"><Calendar size={10}/> {item.date}</span>
                                         </div>
                                         <h4 className="font-bold text-brand-text">{item.title}</h4>
-                                        <p className="text-sm text-brand-coffee line-clamp-1 mt-1">{item.content}</p>
                                     </div>
                                     <div className="flex gap-2">
-                                        <button onClick={()=>handleEditNews(item)} className="p-2 text-brand-wood hover:text-brand-coffee hover:bg-brand-latte rounded transition-colors"><Edit size={16}/></button>
-                                        <button onClick={()=>handleDeleteNews(item.id)} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"><Trash2 size={16}/></button>
+                                        <button type="button" onClick={() => handleEditNews(item)} className="p-2 text-brand-wood hover:text-brand-coffee hover:bg-brand-latte rounded transition-colors"><Edit size={16}/></button>
+                                        <button type="button" onClick={() => handleDeleteNews(item.id)} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"><Trash2 size={16}/></button>
                                     </div>
                                 </div>
                             ))}
@@ -651,6 +639,7 @@ const Admin: React.FC = () => {
                 {/* --- ABOUT TAB --- */}
                 {activeTab === 'about' && aboutData && (
                     <div className="space-y-12 animate-fade-in pb-10">
+                        {/* Header controls */}
                         <div className="flex justify-between items-center mb-6 border-b border-brand-wood/10 pb-4 sticky top-0 bg-brand-cream z-10 py-2">
                              <h3 className="text-brand-text text-xl font-bold font-serif">브랜드 페이지 관리</h3>
                              <div className="flex items-center gap-4">
@@ -678,13 +667,13 @@ const Admin: React.FC = () => {
                                     <label className="block text-xs font-bold text-brand-wood mb-1">서브 텍스트</label>
                                     <textarea value={aboutData.hero.subtitle} onChange={e=>updateAboutField('hero', 'subtitle', e.target.value)} className="w-full p-2 border border-brand-wood/30 rounded bg-white h-20" />
                                 </div>
-                                <div className="col-span-2">
-                                    <label className="block text-xs font-bold text-brand-wood mb-1">배경 이미지</label>
-                                    <div className="flex items-center gap-4">
-                                        <img src={aboutData.hero.imageUrl} className="w-24 h-16 object-cover rounded bg-gray-200" alt="hero"/>
-                                        <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, (url) => updateAboutField('hero', 'imageUrl', url))} className="text-sm text-brand-muted"/>
-                                    </div>
-                                </div>
+                                
+                                <AdminImageInput
+                                    className="col-span-2"
+                                    label="배경 이미지"
+                                    value={aboutData.hero.imageUrl}
+                                    onChange={(val) => updateAboutField('hero', 'imageUrl', val)}
+                                />
                             </div>
                         </div>
 
@@ -696,16 +685,18 @@ const Admin: React.FC = () => {
                                 <textarea value={aboutData.story.description1} onChange={e=>updateAboutField('story', 'description1', e.target.value)} className="w-full p-2 border border-brand-wood/30 rounded bg-white h-24" placeholder="설명 1" />
                                 <textarea value={aboutData.story.description2} onChange={e=>updateAboutField('story', 'description2', e.target.value)} className="w-full p-2 border border-brand-wood/30 rounded bg-white h-24" placeholder="설명 2" />
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div>
-                                        <label className="block text-xs font-bold text-brand-wood mb-1">메인 이미지</label>
-                                        <img src={aboutData.story.imageMain} className="w-full h-32 object-cover rounded mb-2 bg-gray-200" alt="main"/>
-                                        <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, (url) => updateAboutField('story', 'imageMain', url))} className="text-sm text-brand-muted w-full"/>
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-brand-wood mb-1">서브 이미지</label>
-                                        <img src={aboutData.story.imageSub} className="w-full h-32 object-cover rounded mb-2 bg-gray-200" alt="sub"/>
-                                        <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, (url) => updateAboutField('story', 'imageSub', url))} className="text-sm text-brand-muted w-full"/>
-                                    </div>
+                                    <AdminImageInput
+                                        className="col-span-1"
+                                        label="메인 이미지"
+                                        value={aboutData.story.imageMain}
+                                        onChange={(val) => updateAboutField('story', 'imageMain', val)}
+                                    />
+                                    <AdminImageInput
+                                        className="col-span-1"
+                                        label="서브 이미지"
+                                        value={aboutData.story.imageSub}
+                                        onChange={(val) => updateAboutField('story', 'imageSub', val)}
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -713,10 +704,6 @@ const Admin: React.FC = () => {
                         {/* Philosophy Section */}
                         <div className="bg-brand-latte/30 p-6 rounded-lg border border-brand-wood/10">
                              <h4 className="text-brand-wood font-bold mb-4">철학 (Philosophy)</h4>
-                             <div className="mb-4">
-                                <input type="text" value={aboutData.philosophy.title} onChange={e=>updateAboutField('philosophy', 'title', e.target.value)} className="w-full p-2 border border-brand-wood/30 rounded bg-white mb-2" placeholder="메인 타이틀" />
-                                <input type="text" value={aboutData.philosophy.subtitle} onChange={e=>updateAboutField('philosophy', 'subtitle', e.target.value)} className="w-full p-2 border border-brand-wood/30 rounded bg-white" placeholder="서브 타이틀" />
-                             </div>
                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 {aboutData.philosophy.items.map((item, idx) => (
                                     <div key={idx} className="p-3 bg-white rounded border border-brand-wood/10">
@@ -732,11 +719,32 @@ const Admin: React.FC = () => {
                         <div className="bg-brand-latte/30 p-6 rounded-lg border border-brand-wood/10">
                              <div className="flex justify-between items-center mb-4">
                                 <h4 className="text-brand-wood font-bold">내부 갤러리 (Gallery)</h4>
-                                <div className="flex items-center gap-2">
-                                    <label htmlFor="about-gallery-upload" className="cursor-pointer bg-brand-wood text-white px-3 py-1 rounded text-xs flex items-center gap-1 hover:bg-brand-coffee transition-colors">
-                                        <Upload size={14}/> 추가
+                                <div className="flex items-center gap-2 bg-white px-2 py-1 rounded border border-brand-wood/20">
+                                    <input 
+                                        type="text" 
+                                        placeholder="이미지 URL 추가..." 
+                                        className="text-xs p-1 outline-none w-40"
+                                        onKeyDown={(e) => {
+                                            if(e.key === 'Enter') {
+                                                addAboutGalleryImage((e.target as HTMLInputElement).value);
+                                                (e.target as HTMLInputElement).value = '';
+                                            }
+                                        }}
+                                    />
+                                    <div className="h-4 w-px bg-brand-wood/20 mx-1"></div>
+                                    <label htmlFor="about-gallery-upload" className="cursor-pointer text-brand-coffee hover:text-brand-gold">
+                                        <Upload size={14}/>
                                     </label>
-                                    <input id="about-gallery-upload" type="file" accept="image/*" onChange={addAboutGalleryImage} className="hidden" />
+                                    <input id="about-gallery-upload" type="file" accept="image/*" onChange={(e) => handleImageUpload(e, (url) => addAboutGalleryImage(url))} className="hidden" />
+                                    
+                                    <button 
+                                      type="button" 
+                                      onClick={handleAboutGalleryPicker}
+                                      className="text-blue-600 hover:text-blue-800 ml-1"
+                                      title="Google Drive Picker"
+                                    >
+                                      <HardDrive size={14} />
+                                    </button>
                                 </div>
                              </div>
                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -754,7 +762,7 @@ const Admin: React.FC = () => {
                              </div>
                         </div>
 
-                         {/* Location Section */}
+                        {/* Location Section */}
                          <div className="bg-brand-latte/30 p-6 rounded-lg border border-brand-wood/10">
                             <h4 className="text-brand-wood font-bold mb-4">위치 정보 (Location)</h4>
                             <div className="space-y-4">
@@ -776,6 +784,7 @@ const Admin: React.FC = () => {
                     <div className="space-y-8 animate-fade-in">
                         <h3 className="text-brand-text text-xl font-bold font-serif mb-6 border-b border-brand-wood/10 pb-4">사이트 메인 설정</h3>
                         <form onSubmit={handleSaveConfig} className="bg-brand-latte/50 p-6 rounded-lg border border-brand-wood/10 space-y-6">
+                            {/* ... Title inputs ... */}
                             <div>
                                 <label className="block text-xs font-bold text-brand-wood mb-1">메인 히어로 타이틀</label>
                                 <input 
@@ -784,7 +793,6 @@ const Admin: React.FC = () => {
                                     onChange={e => setSiteConfig({...siteConfig, heroTitle: e.target.value})}
                                     className="w-full p-2 border border-brand-wood/30 rounded bg-white"
                                 />
-                                <p className="text-xs text-brand-muted mt-1">* 줄바꿈을 위해 '&' 문자를 사용할 수 있습니다.</p>
                             </div>
                             <div>
                                 <label className="block text-xs font-bold text-brand-wood mb-1">메인 히어로 서브타이틀</label>
@@ -795,13 +803,12 @@ const Admin: React.FC = () => {
                                     className="w-full p-2 border border-brand-wood/30 rounded bg-white"
                                 />
                             </div>
-                            <div>
-                                <label className="block text-xs font-bold text-brand-wood mb-1">철학 섹션 배경 이미지</label>
-                                <div className="flex items-center gap-4">
-                                     <img src={siteConfig.philosophyBackgroundImage} className="w-40 h-24 object-cover rounded bg-gray-200" alt="philosophy bg"/>
-                                     <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, (url) => setSiteConfig({...siteConfig, philosophyBackgroundImage: url}))} className="text-sm text-brand-muted"/>
-                                </div>
-                            </div>
+                            
+                            <AdminImageInput
+                                label="철학 섹션 배경 이미지"
+                                value={siteConfig.philosophyBackgroundImage}
+                                onChange={(val) => setSiteConfig({...siteConfig, philosophyBackgroundImage: val})}
+                            />
                             
                             <hr className="border-brand-wood/10 my-4"/>
                             
