@@ -44,7 +44,7 @@ const Navbar: React.FC = () => {
              {logoUrl ? (
                <img src={logoUrl} alt="Logo" className="w-10 h-10 object-contain" />
              ) : (
-               <Coffee className="text-brand-coffee w-7 h-7" />
+               <Coffee className="text-brand-coffee w-10 h-10" />
              )}
           </div>
           <div className="flex flex-col">
