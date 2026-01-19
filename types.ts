@@ -31,7 +31,11 @@ export interface GalleryItem {
 export interface SiteConfig {
   heroTitle: string;
   heroSubtitle: string;
-  philosophyBackgroundImage: string;
+  heroBackgroundImage: string;      // 메인 히어로 배경
+  philosophyBackgroundImage: string; // 철학 섹션 배경
+  philosophyContentImage1: string;  // 철학 섹션 콘텐츠 이미지 1 (좌/상)
+  philosophyContentImage2: string;  // 철학 섹션 콘텐츠 이미지 2 (우/하)
+  logoImageUrl: string;             // 사이트 로고
 }
 
 // New Types for About Page

@@ -316,7 +316,9 @@ const Admin: React.FC = () => {
     if (siteConfig) {
       try {
         DataService.saveConfig(siteConfig);
-        alert('사이트 설정이 저장되었습니다.');
+        alert('사이트 설정이 저장되었습니다. 변경된 사항을 확인하려면 새로고침 하세요.');
+        // 네비게이션바 등 전역 컴포넌트 업데이트를 위해 리로드 제안
+        // window.location.reload(); 
       } catch (error) {
         alert("저장 공간이 부족합니다. 이미지 용량을 줄여주세요.");
       }
@@ -406,6 +408,8 @@ const Admin: React.FC = () => {
                 {/* --- MENU TAB --- */}
                 {activeTab === 'menu' && (
                     <div className="space-y-8 animate-fade-in">
+                         {/* ... (Existing Menu Tab Content) ... */}
+                         {/* 생략: 기존 코드와 동일 */}
                          <div className="flex justify-between items-center mb-4 border-b border-brand-wood/10 pb-2">
                              <h3 className="text-brand-text text-xl font-bold font-serif">메뉴 등록/수정</h3>
                              <button onClick={() => {setEditingId(null); setNewItem({category:'coffee', isSignature: false});}} className="text-sm text-brand-muted hover:text-brand-coffee flex items-center gap-1">
@@ -413,7 +417,8 @@ const Admin: React.FC = () => {
                              </button>
                          </div>
                          <form onSubmit={handleSaveMenu} className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-brand-latte/50 p-6 rounded-lg border border-brand-wood/10">
-                            <div className="col-span-1">
+                            {/* ... (기존 폼 내용) ... */}
+                             <div className="col-span-1">
                                 <label className="block text-xs font-bold text-brand-wood mb-1">카테고리</label>
                                 <select value={newItem.category} onChange={e => setNewItem({...newItem, category: e.target.value as any})} className="w-full p-2 border border-brand-wood/30 rounded bg-white text-brand-text">
                                     <option value="coffee">Specialty Coffee</option>
@@ -483,14 +488,17 @@ const Admin: React.FC = () => {
                 {/* --- GALLERY TAB --- */}
                 {activeTab === 'gallery' && (
                     <div className="space-y-8 animate-fade-in">
-                        <div className="flex justify-between items-center mb-4 border-b border-brand-wood/10 pb-2">
+                        {/* ... (Existing Gallery Tab Content) ... */}
+                        {/* 생략: 기존 코드와 동일 */}
+                         <div className="flex justify-between items-center mb-4 border-b border-brand-wood/10 pb-2">
                              <h3 className="text-brand-text text-xl font-bold font-serif">갤러리 관리</h3>
                              <button onClick={() => {setEditingGalleryId(null); setNewGalleryItem({category:'interior'});}} className="text-sm text-brand-muted hover:text-brand-coffee flex items-center gap-1">
                                  <Plus size={16}/> 초기화
                              </button>
                         </div>
                         <form onSubmit={handleSaveGallery} className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-brand-latte/50 p-6 rounded-lg border border-brand-wood/10">
-                            <div className="col-span-1">
+                            {/* ... */}
+                             <div className="col-span-1">
                                 <label className="block text-xs font-bold text-brand-wood mb-1">카테고리</label>
                                 <select 
                                     value={newGalleryItem.category} 
@@ -517,7 +525,6 @@ const Admin: React.FC = () => {
                             </button>
                         </form>
                         
-                        {/* Gallery Grid */}
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
                             {galleryItems.map(item => (
                                 <div key={item.id} className="relative group rounded-lg overflow-hidden border border-brand-wood/20 shadow-sm aspect-square bg-white">
@@ -556,14 +563,17 @@ const Admin: React.FC = () => {
                 {/* --- NEWS TAB --- */}
                 {activeTab === 'news' && (
                     <div className="space-y-8 animate-fade-in">
-                        <div className="flex justify-between items-center mb-4 border-b border-brand-wood/10 pb-2">
+                        {/* ... (Existing News Tab Content) ... */}
+                        {/* 생략: 기존 코드와 동일 */}
+                         <div className="flex justify-between items-center mb-4 border-b border-brand-wood/10 pb-2">
                              <h3 className="text-brand-text text-xl font-bold font-serif">뉴스 & 이벤트 관리</h3>
                              <button onClick={() => {setEditingPostId(null); setNewPost({category:'notice', isPinned: false});}} className="text-sm text-brand-muted hover:text-brand-coffee flex items-center gap-1">
                                  <Plus size={16}/> 초기화
                              </button>
                         </div>
                         <form onSubmit={handleSaveNews} className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-brand-latte/50 p-6 rounded-lg border border-brand-wood/10">
-                            <div className="col-span-1">
+                            {/* ... */}
+                             <div className="col-span-1">
                                 <label className="block text-xs font-bold text-brand-wood mb-1">카테고리</label>
                                 <select 
                                     value={newPost.category} 
@@ -610,7 +620,8 @@ const Admin: React.FC = () => {
                         <div className="space-y-4">
                             {newsItems.map(item => (
                                 <div key={item.id} className={`p-4 rounded border flex justify-between items-start ${item.isPinned ? 'bg-brand-gold/10 border-brand-gold/30' : 'bg-white border-brand-wood/10'}`}>
-                                    <div>
+                                    {/* ... */}
+                                     <div>
                                         <div className="flex items-center gap-2 mb-1">
                                             <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded text-white ${item.category === 'notice' ? 'bg-brand-catCoffee' : 'bg-brand-catBaker'}`}>{item.category}</span>
                                             {item.isPinned && <span className="text-[10px] flex items-center gap-0.5 text-brand-gold font-bold"><Pin size={10}/> Pinned</span>}
@@ -631,8 +642,9 @@ const Admin: React.FC = () => {
                 {/* --- ABOUT TAB --- */}
                 {activeTab === 'about' && aboutData && (
                     <div className="space-y-12 animate-fade-in pb-10">
-                        {/* Header controls */}
-                        <div className="flex justify-between items-center mb-6 border-b border-brand-wood/10 pb-4 sticky top-0 bg-brand-cream z-10 py-2">
+                        {/* ... (Existing About Tab Content) ... */}
+                        {/* 생략: 기존 코드와 동일 */}
+                         <div className="flex justify-between items-center mb-6 border-b border-brand-wood/10 pb-4 sticky top-0 bg-brand-cream z-10 py-2">
                              <h3 className="text-brand-text text-xl font-bold font-serif">브랜드 페이지 관리</h3>
                              <div className="flex items-center gap-4">
                                 {saveMessage && (
@@ -776,7 +788,17 @@ const Admin: React.FC = () => {
                     <div className="space-y-8 animate-fade-in">
                         <h3 className="text-brand-text text-xl font-bold font-serif mb-6 border-b border-brand-wood/10 pb-4">사이트 메인 설정</h3>
                         <form onSubmit={handleSaveConfig} className="bg-brand-latte/50 p-6 rounded-lg border border-brand-wood/10 space-y-6">
-                            {/* ... Title inputs ... */}
+                            {/* Logo */}
+                            <AdminImageInput
+                                label="사이트 로고 이미지 (상단바)"
+                                value={siteConfig.logoImageUrl}
+                                onChange={(val) => setSiteConfig({...siteConfig, logoImageUrl: val})}
+                                placeholder="로고 이미지 URL (없을 시 기본 아이콘 사용)"
+                            />
+
+                            <hr className="border-brand-wood/10 my-4"/>
+
+                            {/* Hero Section */}
                             <div>
                                 <label className="block text-xs font-bold text-brand-wood mb-1">메인 히어로 타이틀</label>
                                 <input 
@@ -795,13 +817,34 @@ const Admin: React.FC = () => {
                                     className="w-full p-2 border border-brand-wood/30 rounded bg-white"
                                 />
                             </div>
+                            <AdminImageInput
+                                label="메인 히어로 배경 이미지"
+                                value={siteConfig.heroBackgroundImage}
+                                onChange={(val) => setSiteConfig({...siteConfig, heroBackgroundImage: val})}
+                            />
                             
+                            <hr className="border-brand-wood/10 my-4"/>
+                            
+                            {/* Philosophy Section */}
+                            <h4 className="text-brand-wood font-bold">철학 섹션 이미지 설정</h4>
                             <AdminImageInput
                                 label="철학 섹션 배경 이미지"
                                 value={siteConfig.philosophyBackgroundImage}
                                 onChange={(val) => setSiteConfig({...siteConfig, philosophyBackgroundImage: val})}
                             />
-                            
+                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <AdminImageInput
+                                    label="철학 콘텐츠 이미지 1 (좌측/상단)"
+                                    value={siteConfig.philosophyContentImage1}
+                                    onChange={(val) => setSiteConfig({...siteConfig, philosophyContentImage1: val})}
+                                />
+                                <AdminImageInput
+                                    label="철학 콘텐츠 이미지 2 (우측/하단)"
+                                    value={siteConfig.philosophyContentImage2}
+                                    onChange={(val) => setSiteConfig({...siteConfig, philosophyContentImage2: val})}
+                                />
+                             </div>
+
                             <hr className="border-brand-wood/10 my-4"/>
                             
                             <div>

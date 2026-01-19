@@ -17,12 +17,11 @@ const Home: React.FC = () => {
   return (
     <div className="w-full">
       {/* Hero Section */}
-      {/* Removed overflow-hidden to prevent cutting off content on small screens */}
       <section className="relative min-h-screen w-full flex items-center justify-center bg-brand-coffee">
         {/* Background Image with Overlay */}
         <div className="absolute inset-0 z-0">
           <img 
-            src="https://picsum.photos/id/431/1920/1080" 
+            src={config.heroBackgroundImage || "https://picsum.photos/id/431/1920/1080"} 
             alt="Coffee House Interior" 
             className="w-full h-full object-cover opacity-80"
           />
@@ -31,9 +30,9 @@ const Home: React.FC = () => {
         </div>
 
         {/* Content */}
-        {/* Increased top padding (pt-40) to ensure 'Since 2021' is visible below navbar on mobile */}
-        {/* Added bottom padding (pb-20) to ensure buttons are not cut off */}
-        <div className="relative z-10 text-center px-6 max-w-5xl mx-auto pt-40 pb-20 md:py-0 flex flex-col items-center justify-center min-h-screen">
+        {/* Mobile: Use large padding (pt-52, pb-32) to clear navbar and ensure scrollable content */}
+        {/* Desktop: Use min-h-screen for perfect centering */}
+        <div className="relative z-10 text-center px-6 max-w-5xl mx-auto pt-52 pb-32 md:py-0 flex flex-col items-center justify-center md:min-h-screen">
           <h2 className="text-brand-gold tracking-[0.4em] text-sm md:text-lg font-bold mb-4 md:mb-6 animate-pulse uppercase drop-shadow-lg">
             Since 2021
           </h2>
@@ -127,8 +126,8 @@ const Home: React.FC = () => {
             </p>
           </div>
           <div className="md:w-1/2 grid grid-cols-2 gap-6">
-            <img src="https://picsum.photos/id/425/400/500" className="rounded-lg shadow-2xl border-4 border-brand-wood/30 mt-12 transform hover:scale-105 transition-transform duration-500" alt="Roasting" />
-            <img src="https://picsum.photos/id/225/400/500" className="rounded-lg shadow-2xl border-4 border-brand-wood/30 transform hover:scale-105 transition-transform duration-500" alt="Pour over" />
+            <img src={config.philosophyContentImage1 || "https://picsum.photos/id/425/400/500"} className="rounded-lg shadow-2xl border-4 border-brand-wood/30 mt-12 transform hover:scale-105 transition-transform duration-500" alt="Roasting" />
+            <img src={config.philosophyContentImage2 || "https://picsum.photos/id/225/400/500"} className="rounded-lg shadow-2xl border-4 border-brand-wood/30 transform hover:scale-105 transition-transform duration-500" alt="Pour over" />
           </div>
         </div>
       </section>

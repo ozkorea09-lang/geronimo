@@ -138,7 +138,11 @@ const INITIAL_POSTS: Post[] = [
 const INITIAL_CONFIG: SiteConfig = {
   heroTitle: "World Premium Coffee & Luxury Brunch & Master Bakery",
   heroSubtitle: "도심 속에서 만나는 압도적인 공간감과 예술적인 미식 경험",
-  philosophyBackgroundImage: "https://picsum.photos/id/325/1920/1080"
+  heroBackgroundImage: "https://picsum.photos/id/431/1920/1080",
+  philosophyBackgroundImage: "https://picsum.photos/id/325/1920/1080",
+  philosophyContentImage1: "https://picsum.photos/id/425/400/500",
+  philosophyContentImage2: "https://picsum.photos/id/225/400/500",
+  logoImageUrl: ""
 };
 
 const INITIAL_ABOUT: AboutPageData = {
@@ -220,7 +224,11 @@ export const DataService = {
   getPosts: (): Post[] => getStorage(KEYS.POSTS, INITIAL_POSTS),
   savePosts: (posts: Post[]) => setStorage(KEYS.POSTS, posts),
 
-  getConfig: (): SiteConfig => getStorage(KEYS.CONFIG, INITIAL_CONFIG),
+  // Config: Merge with initial to support new fields on existing data
+  getConfig: (): SiteConfig => {
+    const stored = getStorage(KEYS.CONFIG, INITIAL_CONFIG);
+    return { ...INITIAL_CONFIG, ...stored };
+  },
   saveConfig: (config: SiteConfig) => setStorage(KEYS.CONFIG, config),
 
   getAboutPage: (): AboutPageData => getStorage(KEYS.ABOUT, INITIAL_ABOUT),
