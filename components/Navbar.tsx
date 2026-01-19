@@ -42,7 +42,7 @@ const Navbar: React.FC = () => {
         <Link to="/" className="flex items-center space-x-3 group">
           <div className="bg-brand-gold p-2 rounded-sm shadow-md group-hover:bg-white transition-colors duration-300 flex items-center justify-center">
              {logoUrl ? (
-               <img src={logoUrl} alt="Logo" className="w-12 h-12 object-contain" />
+               <img src={logoUrl} alt="Logo" className="w-10 h-10 object-contain" />
              ) : (
                <Coffee className="text-brand-coffee w-7 h-7" />
              )}
