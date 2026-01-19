@@ -15,8 +15,8 @@ export const transformGoogleDriveUrl = (url: string | undefined | null): string 
   const trimmedUrl = url.trim();
   if (!trimmedUrl) return '';
 
-  // 이미 올바른 형식이거나 구글 드라이브가 아닌 경우 원본 반환 (단, 구글 드라이브 일반 링크는 변환 시도)
-  if (!trimmedUrl.includes('drive.google.com')) {
+  // 구글 드라이브 링크가 아니면 원본 반환
+  if (!trimmedUrl.includes('drive.google.com') && !trimmedUrl.includes('docs.google.com')) {
     return trimmedUrl;
   }
 
@@ -27,12 +27,14 @@ export const transformGoogleDriveUrl = (url: string | undefined | null): string 
 
   let id = '';
 
-  // 1. /file/d/ID 패턴
+  // 1. /file/d/ID 패턴 (가장 일반적)
   const fileIdMatch = trimmedUrl.match(/\/d\/([-a-zA-Z0-9_]+)/);
   if (fileIdMatch && fileIdMatch[1]) {
     id = fileIdMatch[1];
-  } else {
-    // 2. id=ID 쿼리 파라미터 패턴
+  } 
+  
+  // 2. id=ID 쿼리 파라미터 패턴
+  if (!id) {
     const idParamMatch = trimmedUrl.match(/[?&]id=([-a-zA-Z0-9_]+)/);
     if (idParamMatch && idParamMatch[1]) {
       id = idParamMatch[1];

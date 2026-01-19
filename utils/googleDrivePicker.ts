@@ -20,20 +20,32 @@ let oauthToken: string | null = null;
 export const loadGoogleDriveApi = () => {
   if (typeof window === 'undefined') return;
 
-  const script1 = document.createElement('script');
-  script1.src = 'https://apis.google.com/js/api.js';
-  script1.async = true;
-  script1.defer = true;
-  script1.onload = () => {
-    window.gapi.load('picker', { callback: () => { pickerApiLoaded = true; } });
-  };
-  document.body.appendChild(script1);
+  // Prevent duplicate script loading
+  if (document.querySelector('script[src="https://apis.google.com/js/api.js"]')) {
+    // If gapi is already present, ensure picker is loaded
+    if (window.gapi) {
+        window.gapi.load('picker', { callback: () => { pickerApiLoaded = true; } });
+    }
+  } else {
+    const script1 = document.createElement('script');
+    script1.src = 'https://apis.google.com/js/api.js';
+    script1.async = true;
+    script1.defer = true;
+    script1.onload = () => {
+        if (window.gapi) {
+            window.gapi.load('picker', { callback: () => { pickerApiLoaded = true; } });
+        }
+    };
+    document.body.appendChild(script1);
+  }
 
-  const script2 = document.createElement('script');
-  script2.src = 'https://accounts.google.com/gsi/client';
-  script2.async = true;
-  script2.defer = true;
-  document.body.appendChild(script2);
+  if (!document.querySelector('script[src="https://accounts.google.com/gsi/client"]')) {
+    const script2 = document.createElement('script');
+    script2.src = 'https://accounts.google.com/gsi/client';
+    script2.async = true;
+    script2.defer = true;
+    document.body.appendChild(script2);
+  }
 };
 
 // 앱 시작 시 API 로드 시도
@@ -51,7 +63,7 @@ export const openGoogleDrivePicker = (
     return;
   }
 
-  if (!pickerApiLoaded || !window.google) {
+  if (!window.google || !window.google.picker) {
     alert('Google API가 아직 로드되지 않았습니다. 잠시 후 다시 시도해주세요.');
     return;
   }
@@ -62,7 +74,8 @@ export const openGoogleDrivePicker = (
     scope: GOOGLE_DRIVE_CONFIG.scope,
     callback: (response: any) => {
       if (response.error !== undefined) {
-        throw (response);
+        console.error("OAuth Error:", response);
+        return;
       }
       oauthToken = response.access_token;
       createPicker(onSelect, onCancel);
@@ -78,7 +91,7 @@ export const openGoogleDrivePicker = (
 };
 
 const createPicker = (onSelect: (url: string) => void, onCancel?: () => void) => {
-  if (!pickerApiLoaded || !oauthToken) return;
+  if (!oauthToken || !window.google) return;
 
   const view = new window.google.picker.View(window.google.picker.ViewId.DOCS);
   view.setMimeTypes('image/png,image/jpeg,image/jpg,image/webp');
@@ -92,12 +105,13 @@ const createPicker = (onSelect: (url: string) => void, onCancel?: () => void) =>
     .addView(new window.google.picker.DocsUploadView())
     .setDeveloperKey(GOOGLE_DRIVE_CONFIG.developerKey)
     .setCallback((data: any) => {
-      if (data[window.google.picker.Response.ACTION] === window.google.picker.Action.PICKED) {
+      const action = data[window.google.picker.Response.ACTION];
+      if (action === window.google.picker.Action.PICKED) {
         const doc = data[window.google.picker.Response.DOCUMENTS][0];
-        // 공유 가능한 URL (이후 transformGoogleDriveUrl이 변환함)
-        const url = doc[window.google.picker.Document.URL]; 
+        // 자동 변환 로직 제거: 원본 URL을 그대로 반환
+        const url = doc[window.google.picker.Document.URL];
         onSelect(url);
-      } else if (data[window.google.picker.Response.ACTION] === window.google.picker.Action.CANCEL) {
+      } else if (action === window.google.picker.Action.CANCEL) {
         if (onCancel) onCancel();
       }
     })

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { DataService } from '../services/storage';
 import { MenuItem, Post, MenuCategory, GalleryItem, AboutPageData, SiteConfig } from '../types';
-import { transformGoogleDriveUrl } from '../utils/imageHelper';
 import { openGoogleDrivePicker } from '../utils/googleDrivePicker';
 import { AdminImageInput } from '../components/AdminImageInput';
 import { Trash2, Plus, LogIn, Save, Coffee, FileText, Settings, Edit, X, Image as ImageIcon, BookOpen, Pin, Calendar, Upload, CheckCircle, AlertCircle, HardDrive } from 'lucide-react';
@@ -100,9 +99,8 @@ const Admin: React.FC = () => {
     e.preventDefault();
     if (!newItem.name || !newItem.price) return alert('메뉴명과 가격은 필수입니다.');
     
-    // 저장 시 Google Drive URL 변환 적용
-    const rawUrl = newItem.imageUrl || '';
-    const finalImageUrl = transformGoogleDriveUrl(rawUrl) || 'https://via.placeholder.com/800x600?text=No+Image';
+    // 자동 변환 제거: 사용자가 입력한 URL 그대로 저장
+    const finalImageUrl = newItem.imageUrl || 'https://via.placeholder.com/800x600?text=No+Image';
 
     try {
         let updatedItems: MenuItem[];
@@ -151,9 +149,8 @@ const Admin: React.FC = () => {
     e.preventDefault();
     if (!newGalleryItem.title || !newGalleryItem.imageUrl) return alert('제목과 이미지는 필수입니다.');
 
-    // 저장 시 Google Drive URL 변환 안전하게 적용
-    const rawUrl = newGalleryItem.imageUrl || '';
-    const finalImageUrl = transformGoogleDriveUrl(rawUrl);
+    // 자동 변환 제거
+    const finalImageUrl = newGalleryItem.imageUrl || '';
 
     try {
         let updatedItems: GalleryItem[];
@@ -203,8 +200,7 @@ const Admin: React.FC = () => {
     e.preventDefault();
     if (!newPost.title || !newPost.content) return alert('제목과 내용은 필수입니다.');
 
-    const rawUrl = newPost.imageUrl || '';
-    const finalImageUrl = rawUrl ? transformGoogleDriveUrl(rawUrl) : undefined;
+    const finalImageUrl = newPost.imageUrl;
 
     try {
         const todayStr = new Date().toISOString().split('T')[0];
@@ -266,13 +262,9 @@ const Admin: React.FC = () => {
   };
 
   const updateAboutField = (section: keyof AboutPageData, field: string, value: any) => {
-    const finalValue = (field.toLowerCase().includes('image') || field === 'url') 
-      ? transformGoogleDriveUrl(value) 
-      : value;
-
     setAboutData(prev => {
       if (!prev) return null;
-      const sectionData = { ...prev[section], [field]: finalValue };
+      const sectionData = { ...prev[section], [field]: value };
       return { ...prev, [section]: sectionData } as AboutPageData;
     });
   };
@@ -289,7 +281,8 @@ const Admin: React.FC = () => {
   const addAboutGalleryImage = (url: string) => {
       setAboutData(prev => {
           if(!prev) return null;
-          const newImg = { id: Date.now().toString(), url: transformGoogleDriveUrl(url), caption: '새 이미지' };
+          // 자동 변환 제거
+          const newImg = { id: Date.now().toString(), url: url, caption: '새 이미지' };
           return { ...prev, gallery: { ...prev.gallery, images: [...prev.gallery.images, newImg] } };
       });
   };
@@ -313,8 +306,7 @@ const Admin: React.FC = () => {
   // About Gallery Mini Picker Trigger
   const handleAboutGalleryPicker = () => {
     openGoogleDrivePicker((url) => {
-      const transformed = transformGoogleDriveUrl(url);
-      addAboutGalleryImage(transformed);
+      addAboutGalleryImage(url);
     });
   };
 

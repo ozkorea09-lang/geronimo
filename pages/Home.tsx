@@ -17,7 +17,8 @@ const Home: React.FC = () => {
   return (
     <div className="w-full">
       {/* Hero Section */}
-      <section className="relative h-screen w-full overflow-hidden flex items-center justify-center bg-brand-coffee">
+      {/* Removed overflow-hidden to prevent cutting off content on small screens */}
+      <section className="relative min-h-screen w-full flex items-center justify-center bg-brand-coffee">
         {/* Background Image with Overlay */}
         <div className="absolute inset-0 z-0">
           <img 
@@ -30,29 +31,31 @@ const Home: React.FC = () => {
         </div>
 
         {/* Content */}
-        <div className="relative z-10 text-center px-4 max-w-5xl mx-auto">
-          <h2 className="text-brand-gold tracking-[0.4em] text-base md:text-lg font-bold mb-6 animate-pulse uppercase drop-shadow-lg">
+        {/* Increased top padding (pt-40) to ensure 'Since 2021' is visible below navbar on mobile */}
+        {/* Added bottom padding (pb-20) to ensure buttons are not cut off */}
+        <div className="relative z-10 text-center px-6 max-w-5xl mx-auto pt-40 pb-20 md:py-0 flex flex-col items-center justify-center min-h-screen">
+          <h2 className="text-brand-gold tracking-[0.4em] text-sm md:text-lg font-bold mb-4 md:mb-6 animate-pulse uppercase drop-shadow-lg">
             Since 2021
           </h2>
-          <h1 className="font-serif text-6xl md:text-8xl lg:text-9xl text-brand-cream mb-8 leading-tight tracking-tight drop-shadow-2xl">
+          <h1 className="font-serif text-5xl sm:text-6xl md:text-8xl lg:text-9xl text-brand-cream mb-6 md:mb-8 leading-tight tracking-tight drop-shadow-2xl break-keep">
             {config.heroTitle.split('&').map((part, i) => (
                 <span key={i} className="block">{part} {i === 0 && <span className="text-brand-gold">&</span>}</span>
             ))}
           </h1>
-          <p className="text-brand-latte text-xl md:text-2xl font-medium mb-12 max-w-3xl mx-auto leading-relaxed drop-shadow-lg">
+          <p className="text-brand-latte text-lg md:text-2xl font-medium mb-10 md:mb-12 max-w-3xl mx-auto leading-relaxed drop-shadow-lg break-keep px-4">
             {config.heroSubtitle}
           </p>
-          <div className="flex flex-col md:flex-row justify-center items-center gap-6">
+          <div className="flex flex-col md:flex-row justify-center items-center gap-4 md:gap-6 w-full px-4">
             <Link 
               to="/menu" 
-              className="px-10 py-5 bg-brand-gold hover:bg-white hover:text-brand-coffee text-brand-coffee text-lg font-bold transition-all duration-300 min-w-[200px] flex items-center justify-center group rounded-sm shadow-xl"
+              className="w-full md:w-auto px-10 py-4 md:py-5 bg-brand-gold hover:bg-white hover:text-brand-coffee text-brand-coffee text-lg font-bold transition-all duration-300 min-w-[200px] flex items-center justify-center group rounded-sm shadow-xl"
             >
               <span className="mr-2">메뉴 보기</span>
               <ArrowRight size={22} className="group-hover:translate-x-1 transition-transform" />
             </Link>
             <Link 
               to="/about" 
-              className="px-10 py-5 bg-brand-coffee/60 backdrop-blur-md border border-brand-latte hover:bg-brand-latte hover:text-brand-coffee text-brand-latte text-lg transition-all duration-300 min-w-[200px] rounded-sm shadow-lg font-bold"
+              className="w-full md:w-auto px-10 py-4 md:py-5 bg-brand-coffee/60 backdrop-blur-md border border-brand-latte hover:bg-brand-latte hover:text-brand-coffee text-brand-latte text-lg transition-all duration-300 min-w-[200px] rounded-sm shadow-lg font-bold block text-center"
             >
               공간 소개
             </Link>

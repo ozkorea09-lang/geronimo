@@ -1,6 +1,5 @@
 import React, { useRef } from 'react';
-import { Image as ImageIcon, Link as LinkIcon, Upload, HardDrive } from 'lucide-react';
-import { transformGoogleDriveUrl } from '../utils/imageHelper';
+import { Image as ImageIcon, Link as LinkIcon, Upload, HardDrive, AlertTriangle } from 'lucide-react';
 import { openGoogleDrivePicker } from '../utils/googleDrivePicker';
 
 interface AdminImageInputProps {
@@ -15,19 +14,10 @@ export const AdminImageInput: React.FC<AdminImageInputProps> = ({
   label,
   value,
   onChange,
-  placeholder = "이미지 URL 또는 구글 드라이브 링크",
+  placeholder = "이미지 직링크(Direct Link) URL 입력",
   className = ""
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleBlur = () => {
-    if (value) {
-      const transformed = transformGoogleDriveUrl(value);
-      if (transformed !== value) {
-        onChange(transformed);
-      }
-    }
-  };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -46,8 +36,8 @@ export const AdminImageInput: React.FC<AdminImageInputProps> = ({
 
   const handleGoogleDrivePick = () => {
     openGoogleDrivePicker((url) => {
-      const transformed = transformGoogleDriveUrl(url);
-      onChange(transformed);
+      // 자동 변환 없이 선택된 URL 그대로 입력창에 반영
+      onChange(url);
     });
   };
 
@@ -56,12 +46,12 @@ export const AdminImageInput: React.FC<AdminImageInputProps> = ({
       {label && <label className="block text-xs font-bold text-brand-wood mb-1">{label}</label>}
       <div className="flex flex-col md:flex-row gap-4">
         {/* Preview Area */}
-        <div className="w-20 h-20 bg-brand-wood/10 rounded overflow-hidden flex-shrink-0 border border-brand-wood/20 relative group">
+        <div className="w-24 h-24 bg-brand-wood/10 rounded overflow-hidden flex-shrink-0 border border-brand-wood/20 relative group bg-[url('https://www.transparenttextures.com/patterns/checkerboard.png')]">
           {value ? (
-            <img src={value} alt="Preview" className="w-full h-full object-cover" />
+            <img src={value} alt="Preview" className="w-full h-full object-cover" onError={(e) => (e.currentTarget.src = 'https://via.placeholder.com/150?text=Error')} />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <ImageIcon size={20} className="text-brand-wood/40" />
+              <ImageIcon size={24} className="text-brand-wood/40" />
             </div>
           )}
         </div>
@@ -75,7 +65,6 @@ export const AdminImageInput: React.FC<AdminImageInputProps> = ({
               type="text"
               value={value || ''}
               onChange={(e) => onChange(e.target.value)}
-              onBlur={handleBlur}
               className="w-full p-2 border border-brand-wood/30 rounded bg-white text-sm focus:border-brand-coffee outline-none transition-colors"
               placeholder={placeholder}
             />
@@ -90,7 +79,7 @@ export const AdminImageInput: React.FC<AdminImageInputProps> = ({
               className="flex-1 flex items-center justify-center gap-2 bg-brand-wood/10 hover:bg-brand-wood/20 text-brand-muted text-xs py-2 px-3 rounded transition-colors"
             >
               <Upload size={14} />
-              <span>파일 업로드</span>
+              <span>로컬 파일 업로드</span>
             </button>
             <input
               ref={fileInputRef}
@@ -104,11 +93,19 @@ export const AdminImageInput: React.FC<AdminImageInputProps> = ({
             <button
               type="button"
               onClick={handleGoogleDrivePick}
-              className="flex-1 flex items-center justify-center gap-2 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs py-2 px-3 rounded transition-colors border border-blue-200"
+              className="flex-1 flex items-center justify-center gap-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs py-2 px-3 rounded transition-colors"
             >
               <HardDrive size={14} />
-              <span>구글 드라이브</span>
+              <span>구글 드라이브 선택</span>
             </button>
+          </div>
+
+          {/* Helper Text */}
+          <div className="text-[10px] text-brand-muted/70 flex items-start gap-1">
+            <AlertTriangle size={10} className="mt-0.5 text-brand-gold"/>
+            <span>
+              구글 드라이브 이미지가 보이지 않는다면, <strong>'링크가 있는 모든 사용자에게 공개'</strong> 권한인지 확인해주세요.
+            </span>
           </div>
         </div>
       </div>

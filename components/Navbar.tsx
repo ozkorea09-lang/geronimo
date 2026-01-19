@@ -58,12 +58,6 @@ const Navbar: React.FC = () => {
               {link.name}
             </Link>
           ))}
-          <Link 
-            to="/admin" 
-            className="px-6 py-2.5 border-2 border-brand-wood text-brand-wood text-sm font-bold hover:bg-brand-wood hover:text-white transition-all duration-300 rounded-sm uppercase tracking-widest"
-          >
-            Admin
-          </Link>
         </nav>
         
         {/* Tablet Nav (Smaller font if needed, or keep hidden) */}
@@ -105,13 +99,6 @@ const Navbar: React.FC = () => {
               {link.name}
             </Link>
           ))}
-          <Link 
-            to="/admin"
-            className="text-lg text-brand-wood pt-6 pl-6"
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            관리자 로그인
-          </Link>
         </div>
       )}
     </header>
