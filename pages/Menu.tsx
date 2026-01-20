@@ -112,4 +112,12 @@ const Menu: React.FC = () => {
         </div>
       </div>
 
-      <div className="container mx
+<div className="container mx-auto px-6">
+          <p className="text-center text-brand-coffee">메뉴 데이터를 불러오는 중이거나 메뉴가 비어 있습니다.</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Menu;      
