@@ -3,7 +3,7 @@ import { supabase } from '../supabaseClient';
 import { 
   Trash2, Plus, LogIn, Save, Coffee, Image as ImageIcon, 
   Edit, CheckCircle 
-} from 'lucide-react'; // 여기에 Plus를 추가했습니다!
+} from 'lucide-react';
 
 const Admin: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -38,6 +38,7 @@ const Admin: React.FC = () => {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
+    // 0000 혹은 1234로 접속 가능
     if (password === '1234' || password === '0000') { 
       setIsAuthenticated(true);
     } else {
@@ -78,7 +79,7 @@ const Admin: React.FC = () => {
           <h1 className="text-2xl font-bold text-center text-[#4A3428] mb-8">관리자 로그인</h1>
           <input 
             type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-            className="w-full p-4 border border-gray-200 rounded-xl mb-4 bg-white text-black" 
+            className="w-full p-4 border border-gray-200 rounded-xl mb-4 bg-white text-black focus:ring-2 focus:ring-[#4A3428] outline-none" 
             placeholder="비밀번호를 입력하세요"
           />
           <button type="submit" className="w-full bg-[#4A3428] text-white py-4 rounded-xl font-bold">
@@ -123,13 +124,14 @@ const Admin: React.FC = () => {
                 <option value="dessert">Dessert</option>
               </select>
               <input type="text" placeholder="이미지 URL" value={newItem.image_url} onChange={e => setNewItem({...newItem, image_url: e.target.value})} className="p-3 border rounded-xl bg-gray-50 text-black" />
-              <button type="submit" className="md:col-span-2 bg-[#4A3428] text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2">
+              <button type="submit" className="md:col-span-2 bg-[#4A3428] text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-[#38271E]">
                 <Save size={20} /> {editingId ? '수정 완료' : '메뉴 추가하기'}
               </button>
             </form>
           </div>
 
           <div className="grid gap-4">
+            <h3 className="font-bold text-gray-400">등록된 메뉴 목록 ({menuItems.length})</h3>
             {menuItems.map((item: any) => (
               <div key={item.id} className="bg-white p-4 rounded-2xl border flex items-center justify-between shadow-sm">
                 <div className="flex items-center gap-4">
@@ -140,8 +142,8 @@ const Admin: React.FC = () => {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => { setEditingId(item.id); setNewItem(item); window.scrollTo(0,0); }} className="p-2 text-blue-600"><Edit size={20}/></button>
-                  <button onClick={() => handleDelete(item.id)} className="p-2 text-red-600"><Trash2 size={20}/></button>
+                  <button onClick={() => { setEditingId(item.id); setNewItem(item); window.scrollTo(0,0); }} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"><Edit size={20}/></button>
+                  <button onClick={() => handleDelete(item.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg"><Trash2 size={20}/></button>
                 </div>
               </div>
             ))}
